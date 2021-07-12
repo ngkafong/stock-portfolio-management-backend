@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
-from . import models, schemas
+import models
+import schemas
 
 def get_portfolio(db: Session, portfolio_id: int):
     return db.query(models.Portfolio).filter(models.Portfolio.id == portfolio_id).first()

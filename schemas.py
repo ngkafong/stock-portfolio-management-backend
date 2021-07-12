@@ -39,5 +39,6 @@ class PortfolioCreate(PortfolioBase):
 class Portfolio(BaseModel):
     id: int
     transactions: List[Transaction] = []
+    calculation_result: List[dict] = []
     class Config:
         orm_mode = True
