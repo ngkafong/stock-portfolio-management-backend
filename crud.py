@@ -1,9 +1,15 @@
 from sqlalchemy.orm import Session
 import models
 import schemas
+import json
 
 def get_portfolio(db: Session, portfolio_id: int):
-    return db.query(models.Portfolio).filter(models.Portfolio.id == portfolio_id).first()
+    db_portfolio = db.query(models.Portfolio).filter(models.Portfolio.id == portfolio_id).first()
+    calculation_result_file_path = "./data/calculation_result/" + db_portfolio["calculation_result_filename"]
+    return {
+       **db_portfolio,
+       calculation_result: json.load(calculation_result_file_path)
+    }
 
 
 def get_portfolios(db: Session):
@@ -19,7 +25,12 @@ def create_portfolio(db: Session, portfolio: schemas.PortfolioCreate):
 
 
 def get_transaction(db: Session, transaction_id: int):
-    return db.query(models.Transaction).filter(models.Transaction.id == transaction_id).first()
+    db_transaction = db.query(models.Transaction).filter(models.Transaction.id == transaction_id).first()
+    calculation_result_file_path = "./data/calculation_result/" + db_transaction["calculation_result_filename"]
+    return {
+        **db_transaction,
+        calculation_result: json.load(calculation_result_file_path)
+    }
 
 def get_transactions(db: Session, portolio_id: int):
     return db.query(models.Transaction).filter(models.Transaction.portfolio_id == portolio_id).all()
