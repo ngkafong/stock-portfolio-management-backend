@@ -8,7 +8,7 @@ class Portfolio(Base):
     __tablename__ = "portfolios"
 
     portfolio_id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, unique=True, index=True)
+    title = Column(String, unique=True)
 
     portfolio_stocks = relationship('PortfolioStock', back_populates="portfolio")
 
