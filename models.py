@@ -21,10 +21,10 @@ class Stock(Base):
     stock_close_prices = relationship('StockClosePrice')
 
 class PortfolioStock(Base):
-    __table__ = "portfolio_stocks"
+    __tablename__ = "portfolio_stocks"
 
-    portfolio_id = Column(Integer, ForeignKey('portfolios.id'), primary_key=True)
-    stock_symbol = Column(String, ForeignKey('stocks.id'), primary_key=True)
+    portfolio_id = Column(Integer, ForeignKey('portfolios.portfolio_id'), primary_key=True)
+    stock_symbol = Column(String, ForeignKey('stocks.stock_symbol'), primary_key=True)
 
     portfolio = relationship('Portfolio', back_populates="portfolio_stocks")
     stock = relationship('Stock', back_populates="portfolio_stocks")
@@ -35,10 +35,10 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     transaction_id = Column(Integer, primary_key=True, index=True)
-    portfolio_id = Column(Integer, ForeignKey('portfolios.id'))
-    stock_symbol = Column(String, ForeignKey('stocks.stock_symbol'))
-    transaction_date = Column(Date)
-    action = Column(String)
+    portfolio_id = Column(Integer, ForeignKey('portfolios.portfolio_id'), nullable=False)
+    stock_symbol = Column(String, ForeignKey('stocks.stock_symbol'), nullable=False)
+    transaction_date = Column(Date, nullable=False)
+    action = Column(String, nullable=False)
     shares = Column(Integer, default=0)
     value = Column(Numeric(10, 3), default=0)
     fee = Column(Numeric(10, 3), default=0)
@@ -47,6 +47,6 @@ class Transaction(Base):
 class StockClosePrice(Base):
     __tablename__ = "stock_close_prices"
 
-    stock_symbol = Column(String, ForeignKey('stock'), primary_key=True)
+    stock_symbol = Column(String, ForeignKey('stocks.stock_symbol'), primary_key=True)
     date = Column(Date, primary_key=True)
 
