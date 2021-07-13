@@ -28,7 +28,11 @@ class PortfolioStock(Base):
 
     portfolio = relationship('Portfolio', back_populates="portfolio_stocks")
     stock = relationship('Stock', back_populates="portfolio_stocks")
-    transactions = relationship('Transaction', back_populates="portfolio_stock")
+    transactions = relationship(
+        'Transaction', 
+        primaryjoin="and_(Transaction.portfolio_id == foreign(PortfolioStock.portfolio_id), "
+        "Transaction.stock_symbol == PortfolioStock.stock_symbol)"
+    )
 
 
 class Transaction(Base):
@@ -37,7 +41,7 @@ class Transaction(Base):
     transaction_id = Column(Integer, primary_key=True, index=True)
     portfolio_id = Column(Integer, ForeignKey('portfolios.portfolio_id'), nullable=False)
     stock_symbol = Column(String, ForeignKey('stocks.stock_symbol'), nullable=False)
-    transaction_date = Column(Date, nullable=False)
+    date = Column(Date, nullable=False)
     action = Column(String, nullable=False)
     shares = Column(Integer, default=0)
     value = Column(Numeric(10, 3), default=0)

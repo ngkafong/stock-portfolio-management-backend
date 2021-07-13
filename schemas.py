@@ -1,13 +1,14 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import date
 
 
 class TransactionBase(BaseModel):
     portfolio_id: int
+    stock_symbol: str
     action: str
-    stock: str
-    date: str
-    share: Optional[int]
+    date: date
+    shares: Optional[int]
     value: Optional[float]
 
     class Config:
@@ -21,7 +22,7 @@ class TransactionCreate(TransactionBase):
 
 
 class Transaction(TransactionBase):
-    id: int
+    transaction_id: int
 
 
 

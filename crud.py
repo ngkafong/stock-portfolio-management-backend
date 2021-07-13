@@ -38,7 +38,7 @@ def get_transactions(db: Session, portolio_id: int):
 
 
 def create_transaction(db: Session, transaction: schemas.TransactionCreate):
-    db_transaction = models.Portfolio(**transaction.dict())
+    db_transaction = models.Transaction(**transaction.dict())
     db.add(db_transaction)
     db.commit()
     db.refresh(db_transaction)
