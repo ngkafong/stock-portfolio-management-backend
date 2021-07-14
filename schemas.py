@@ -25,6 +25,9 @@ class Transaction(TransactionBase):
     transaction_id: int
 
 
+class TransactionUpdate(TransactionBase):
+    pass
+
 
 
 class PortfolioBase(BaseModel):
@@ -36,10 +39,14 @@ class PortfolioCreate(PortfolioBase):
     pass
 
 
+class PortfolioUpdate(PortfolioBase):
+    pass
+
+
 
 class Portfolio(BaseModel):
     portfolio_id: int
     title: str
-    transactions: List[Transaction] = []
+    calculation_results: List[dict] = []
     class Config:
         orm_mode = True

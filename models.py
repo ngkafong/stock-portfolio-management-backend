@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, Date
+from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, Date, ForeignKeyConstraint
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -28,24 +28,25 @@ class PortfolioStock(Base):
 
     portfolio = relationship('Portfolio', back_populates="portfolio_stocks")
     stock = relationship('Stock', back_populates="portfolio_stocks")
-    transactions = relationship(
-        'Transaction', 
-        primaryjoin="and_(Transaction.portfolio_id == foreign(PortfolioStock.portfolio_id), "
-        "Transaction.stock_symbol == PortfolioStock.stock_symbol)"
-    )
+    transactions = relationship('Transaction', back_populates="portfolio_stock")
 
 
 class Transaction(Base):
     __tablename__ = "transactions"
 
     transaction_id = Column(Integer, primary_key=True, index=True)
-    portfolio_id = Column(Integer, ForeignKey('portfolios.portfolio_id'), nullable=False)
-    stock_symbol = Column(String, ForeignKey('stocks.stock_symbol'), nullable=False)
+    portfolio_id = Column(Integer, nullable=False)
+    stock_symbol = Column(String, nullable=False)
     date = Column(Date, nullable=False)
     action = Column(String, nullable=False)
     shares = Column(Integer, default=0)
     value = Column(Numeric(10, 3), default=0)
     fee = Column(Numeric(10, 3), default=0)
+
+    portfolio_stock = relationship('PortfolioStock')
+    __table_args__ = (ForeignKeyConstraint([portfolio_id, stock_symbol],
+                                           [PortfolioStock.portfolio_id, PortfolioStock.stock_symbol]),
+                      {})
 
 
 class StockClosePrice(Base):

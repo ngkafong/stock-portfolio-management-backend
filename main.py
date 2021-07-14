@@ -24,6 +24,9 @@ def get_db():
 def read_root():
     return {"Hello": "World"}
 
+@app.get("/transactions")
+def getTransaction(db: Session = Depends(get_db)):
+    return crud.get_transactions(db=db)
 
 @app.get("/transactions/{transaction_id}")
 def getTransaction(transaction_id: int, db: Session = Depends(get_db)):
@@ -35,13 +38,13 @@ def newTransaction(transaction: schemas.TransactionCreate, db: Session = Depends
     return crud.create_transaction(db=db, transaction=transaction)
 
 
-@app.put("/transactions/{transaction_id}")
-def updateTransaction(transaction_id: int):
-    return {"transaction_id" : "TODO"}
+@app.put("/transactions/{transaction_id}", response_model=schemas.Transaction)
+def updateTransaction(transaction_id: int, transaction: schemas.TransactionUpdate, db: Session = Depends(get_db)):
+    return crud.update_transaction(db, transaction_id, transaction)
 
 @app.delete("/transactions/{transaction_id}")
-def deleteTransaction(transaction_id: int):
-    return {"transaction_id" : "TODO"}
+def deleteTransaction(transaction_id: int, db: Session = Depends(get_db)):
+    return crud.delete_transaction(db=db, transaction_id=transaction_id)
 
 
 @app.get("/portfolios", response_model=List[schemas.Portfolio])
