@@ -50,3 +50,10 @@ class Portfolio(BaseModel):
     calculation_results: List[dict] = []
     class Config:
         orm_mode = True
+
+class PortfolioStockBase(BaseModel):
+    portfolio_id: int
+    stock_symbol: str
+
+class PortfolioStockCreate(PortfolioStockBase):
+    pass

@@ -26,12 +26,23 @@ def get_transaction(db: Session, transaction_id: int):
 def get_transactions(db: Session):
     return db.query(models.Transaction).all()
 
+def create_portfolio_stock(db: Session, portfolio_stock: schemas.PortfolioStockCreate):
+    db_portfolio_stock = models.PortfolioStock(**portfolio_stock.dict())
+    db.add(db_portfolio_stock)
+    db.commit()
+    db.refresh(db_portfolio_stock)
+    return db_portfolio_stock
 
 def create_transaction(db: Session, transaction: schemas.TransactionCreate):
     db_transaction = models.Transaction(**transaction.dict())
     db.add(db_transaction)
     db.commit()
     db.refresh(db_transaction)
+
+    if db_transaction.portfolio_stock is None:
+        portfolio_stock = schemas.PortfolioStockCreate.parse_obj(transaction.dict())
+        create_portfolio_stock(db, portfolio_stock)
+
     return db_transaction
 
 def update_transaction(db: Session, transaction_id: int, transaction: schemas.TransactionUpdate):
@@ -39,6 +50,11 @@ def update_transaction(db: Session, transaction_id: int, transaction: schemas.Tr
         .filter(models.Transaction.transaction_id == transaction_id)\
         .update(transaction.dict())
     db.commit()
+
+    if db_transaction.portfolio_stock is None:
+        portfolio_stock = schemas.PortfolioStockCreate.parse_obj(transaction.dict())
+        create_portfolio_stock(db, portfolio_stock)
+
     return db.query(models.Transaction).filter(models.Transaction.transaction_id == transaction_id).first()
 
 def delete_transaction(db: Session, transaction_id: int):
