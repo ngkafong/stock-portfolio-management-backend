@@ -3,6 +3,11 @@ import models
 import schemas
 import json
 
+def delete_garbage_portfolio_stock(db: Session):
+    db.query(models.PortfolioStock).filter(not models.PortfolioStock.transactions).delete()
+    db.commit()
+    return
+
 def get_portfolio(db: Session, portfolio_id: int):
     return db.query(models.Portfolio).filter(models.Portfolio.portfolio_id == portfolio_id).first()
 
@@ -45,19 +50,21 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate):
 
     return db_transaction
 
+
 def update_transaction(db: Session, transaction_id: int, transaction: schemas.TransactionUpdate):
-    db.query(models.Transaction)\
-        .filter(models.Transaction.transaction_id == transaction_id)\
-        .update(transaction.dict())
+    db_transaction = models.Transaction(transaction_id = transaction_id, **transaction.dict())
+    db_transaction = db.merge(db_transaction)
     db.commit()
 
     if db_transaction.portfolio_stock is None:
         portfolio_stock = schemas.PortfolioStockCreate.parse_obj(transaction.dict())
         create_portfolio_stock(db, portfolio_stock)
 
-    return db.query(models.Transaction).filter(models.Transaction.transaction_id == transaction_id).first()
+    delete_garbage_portfolio_stock(db)
+    return db_transaction
 
 def delete_transaction(db: Session, transaction_id: int):
     delete_result = db.query(models.Transaction).filter(models.Transaction.transaction_id == transaction_id).delete()
     db.commit()
+    delete_garbage_portfolio_stock(db)
     return delete_result
