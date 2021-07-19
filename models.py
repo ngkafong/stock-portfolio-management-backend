@@ -10,15 +10,16 @@ class Portfolio(Base):
     portfolio_id = Column(Integer, primary_key=True, index=True)
     title = Column(String, unique=True)
 
-    portfolio_stocks = relationship('PortfolioStock', back_populates="portfolio")
+    portfolio_stocks = relationship('PortfolioStock', back_populates="portfolio", cascade="all, delete-orphan")
 
 class Stock(Base):
     __tablename__ = "stocks"
 
     stock_symbol = Column(String, primary_key=True)
+    name = Column(String)
 
-    portfolio_stocks = relationship('PortfolioStock', back_populates="stock")
-    stock_close_prices = relationship('StockClosePrice')
+    portfolio_stocks = relationship('PortfolioStock', back_populates="stock", cascade="all, delete-orphan")
+    stock_close_prices = relationship('StockClosePrice', cascade="all, delete-orphan")
 
 class PortfolioStock(Base):
     __tablename__ = "portfolio_stocks"
@@ -28,7 +29,7 @@ class PortfolioStock(Base):
 
     portfolio = relationship('Portfolio', back_populates="portfolio_stocks")
     stock = relationship('Stock', back_populates="portfolio_stocks")
-    transactions = relationship('Transaction', back_populates="portfolio_stock")
+    transactions = relationship('Transaction', back_populates="portfolio_stock", cascade="all, delete-orphan")
 
 
 class Transaction(Base):

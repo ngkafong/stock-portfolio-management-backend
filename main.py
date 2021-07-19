@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 import crud
 import models
 import schemas
+import financeapi
 from database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
@@ -18,6 +19,14 @@ def get_db():
         yield db
     finally:
         db.close()
+
+@app.on_event("startup")
+async def initialize():
+    db = SessionLocal()
+    if db.query(models.Stock).first() is None:
+        financeapi.update_stock_list(db)
+    db.close()
+    return
 
 
 @app.get("/")

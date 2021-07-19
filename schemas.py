@@ -57,3 +57,20 @@ class PortfolioStockBase(BaseModel):
 
 class PortfolioStockCreate(PortfolioStockBase):
     pass
+
+
+class StockBase(BaseModel):
+    stock_symbol: str
+    name: str
+
+
+class StockCreate(StockBase):
+    pass
+
+
+class Stock(StockBase):
+    pass
+
+
+class StockDetailed(StockBase):
+    calculation_results: List[dict] = []
