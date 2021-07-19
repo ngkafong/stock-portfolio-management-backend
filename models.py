@@ -55,4 +55,5 @@ class StockClosePrice(Base):
 
     stock_symbol = Column(String, ForeignKey('stocks.stock_symbol'), primary_key=True)
     date = Column(Date, primary_key=True)
+    close_price = Column(Numeric(10, 3), nullable=False)
 

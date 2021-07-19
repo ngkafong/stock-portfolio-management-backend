@@ -33,7 +33,7 @@ def update_stock_history(db: Session, stock_symbol: str):
     _close_price_daily = schemas.StockClosePrice(
       stock_symbol = stock_symbol,
       close_price = close_price_daily['Close'],
-      date = close_price_daily.text
+      date = close_price_daily['date']
     )
     db_stock_close_price = models.StockClosePrice(**_close_price_daily.dict())
     db.merge(db_stock_close_price)

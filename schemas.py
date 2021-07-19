@@ -74,3 +74,12 @@ class Stock(StockBase):
 
 class StockDetailed(StockBase):
     calculation_results: List[dict] = []
+
+
+class StockClosePrice(BaseModel):
+    __tablename__ = "stock_close_prices"
+
+    stock_symbol: str
+    date: date
+    close_price: float
+
