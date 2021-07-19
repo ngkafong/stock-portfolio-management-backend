@@ -5,13 +5,14 @@ import requests
 import models
 import schemas
 
-def update_stock_list(db: Session):
-
+def fetch_stock_list():
   headers = {
     "User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:84.0) Gecko/20100101 Firefox/84.0",
   }
   request = requests.get('https://api.nasdaq.com/api/screener/stocks?tableonly=true&download=true', headers=headers)
-  stock_list = request.json()["data"]["rows"]
+  return request.json()["data"]["rows"]
+
+def update_stock_list(db: Session, stock_list=fetch_stock_list()):
 
   for stock in stock_list:
     _stock = schemas.StockCreate(stock_symbol = stock['symbol'], name = stock['name'])
@@ -45,5 +46,28 @@ def update_stock_history(db: Session, stock_symbol: str):
 
 
 def update_stocks_today(db: Session):
+
+  stock_list = fetch_stock_list()
+  update_stock_list(db, stock_list)
+  stock_list_df = pd.DataFrame(stock_list)
+
+  def update_stock_today(stock_price_today):
+    _stock_price_today = schemas.StockClosePrice(
+      stock_symbol = stock_price_today['symbol'],
+      close_price = stock_price_today['Close'],
+      date = close_price_daily['date']
+    )
+
+    db_stock_price_today = models.StockClosePrice(**_stock_price_today.dict())
+    db.merge(stock_price_today)
+    return
+
+  stocks_with_transactions = db.query(models.Stock.stock_symbol)\
+    .filter(models.Stock.transactions is not None)\
+    .all()
+
+  stock_list_df
+    [stock_list_df.symbol in stocks_with_transactions]
+    .apply(update_stock_today, axis=1)
 
   return
