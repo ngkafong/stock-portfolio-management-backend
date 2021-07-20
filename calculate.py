@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 import models
 from operator import itemgetter
 import pandas as pd
+import financeapi
 
 def transaction_record_to_account_movement(transaction):
 
@@ -19,19 +20,25 @@ def transaction_record_to_account_movement(transaction):
       share_change = -share
       cash_change = value * share + fee
 
-  if action == 'dividendCash':
-      cash_change = value
+  if action == 'dividend-cash':
+      cash_change = value - fee
 
   if action == 'adjustShare':
       share_change = shares
+      cash_cahgne = - fee
 
 
   return {
     'date': date,
     'stock_symbol': stock_symbol,
     'share_change': share_change,
-    'cash_change': cash_change
+    'cash_change': cash_change,
   }
+
+
+def calculate_portfolio_stock(transactions, stock_prices):
+
+
 
 def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str, db: Session):
 
@@ -44,15 +51,18 @@ def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str,
 
   start_date = min(map(lambda t: t['date'], transactions))
 
+  if ( db.Query(StockClosePrice)
+    .filter(StockClosePrice.stock_symbol == stock_symbol)
+    .first()
+    is None
+  ):
+    financeapi.update_stock_history(db, stock_symbol)
+
   stock_prices = db.Query(StockClosePrice)\
     .filter(StockClosePrice.stock_symbol == stock_symbol)\
-    .filter(StockClosePrice.date >= start_date)\
     .all()
 
-  calculate_portfolio_stock(transactions, stock_prices)
-
-
-  return
+  return calculate_portfolio_stock(transactions, stock_prices)
 
 def get_portfolio_calculation_result(portfolio_id: int, db: Session):
 
