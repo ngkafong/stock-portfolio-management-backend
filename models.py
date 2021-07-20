@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, Date, ForeignKeyConstraint
 from sqlalchemy.orm import relationship
-from calculate import calculatePortfolio
 from database import Base
 
 

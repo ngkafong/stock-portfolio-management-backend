@@ -13,12 +13,12 @@ def transaction_record_to_account_movement(transaction):
   cash_change = 0
 
   if action == 'buy':
-      share_change = share
-      cash_change = -value * share - fee
+      share_change = shares
+      cash_change = -value * shares - fee
 
   if action == 'sell':
-      share_change = -share
-      cash_change = value * share + fee
+      share_change = -shares
+      cash_change = value * shares + fee
 
   if action == 'dividend-cash':
       cash_change = value - fee
@@ -37,7 +37,7 @@ def transaction_record_to_account_movement(transaction):
 
 
 def calculate_portfolio_stock(transactions, stock_prices):
-
+  return [{"calculate_portfolio_stock": "TODO"}]
 
 
 def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str, db: Session):
@@ -82,6 +82,6 @@ def get_portfolio_calculation_result(portfolio_id: int, db: Session):
   portfolio_result = calculate_portfolio(portfoliio_stocks_result)
 
   return {
-    portfolio_result: portfolio_result
+    portfolio_result: portfolio_result,
     portfoliio_stocks_result: portfoliio_stocks_result
   }

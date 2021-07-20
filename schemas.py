@@ -70,7 +70,8 @@ class StockCreate(StockBase):
 
 
 class Stock(StockBase):
-    pass
+    class Config:
+        orm_mode = True
 
 
 class StockDetailed(StockBase):

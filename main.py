@@ -67,3 +67,8 @@ def getPortfolio(portfolio_id: int, db: Session = Depends(get_db)):
 @app.post("/portfolios", response_model=schemas.Portfolio)
 def newPortfolio(portfolio: schemas.PortfolioCreate, db: Session = Depends(get_db)):
     return crud.create_portfolio(db=db, portfolio=portfolio)
+
+
+@app.get("/stocks/{search_str}", response_model=List[schemas.Stock])
+def getStocks(search_str: str, db: Session = Depends(get_db)):
+    return crud.search_stocks(db, search_str)

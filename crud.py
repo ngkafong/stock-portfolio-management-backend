@@ -68,3 +68,9 @@ def delete_transaction(db: Session, transaction_id: int):
     db.commit()
     delete_garbage_portfolio_stock(db)
     return delete_result
+
+def search_stocks(db: Session, search_str: str):
+    return db.query(models.Stock).filter(
+        models.Stock.stock_symbol.like("{}%".format(search_str)) |
+        models.Stock.name.like("%{}%".format(search_str))
+    ).all()
