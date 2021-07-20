@@ -66,8 +66,8 @@ def update_stocks_today(db: Session):
     .filter(models.Stock.transactions is not None)\
     .all()
 
-  stock_list_df
-    [stock_list_df.symbol in stocks_with_transactions]
+  stock_list_df\
+    [stock_list_df.symbol in stocks_with_transactions]\
     .apply(update_stock_today, axis=1)
 
   return

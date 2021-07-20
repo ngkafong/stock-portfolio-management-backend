@@ -10,6 +10,7 @@ class TransactionBase(BaseModel):
     date: date
     shares: Optional[int]
     value: Optional[float]
+    fee: Optional[float]
 
     class Config:
         orm_mode = True
