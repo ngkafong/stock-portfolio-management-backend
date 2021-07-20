@@ -1,112 +1,77 @@
+from sqlalchemy.orm import Session
+import models
+from operator import itemgetter
 import pandas as pd
-import numpy as np
-import yfinance as yf
-from datetime import timedelta, datetime
 
-transactions = [
-    {'date': '2020-07-02', 'action': 'buy', 'ticker': 'SOXX', 'share': 2, 'price': 300.0}, #buy
-    {'date': '2021-08-20', 'action': 'sell', 'ticker': 'SOXX', 'share': 2, 'price': 320.0}, #sell
-    {'date': '2020-07-24', 'action': 'dividendCash', 'ticker': 'SOXQ', 'amount': 3 }, #cash dividend
-    {'date': '2020-08-20', 'action': 'adjustShare', 'ticker': 'SOXX', 'share': 1}, #share dividend/ merge/ split
-]
+def transaction_record_to_account_movement(transaction):
 
-ydf = pd.DataFrame()
+  date, action, stock_symbol, shares, value, fee = \
+    itemgetter('date', 'action', 'stock_symbol', 'shares', 'value', 'fee')(transaction)
 
-def transactionRecordsToTickersBalance(transactions):
+  share_change = 0
+  cash_change = 0
 
-    def transactionRecordToAccountMovement(transaction):
+  if action == 'buy':
+      share_change = share
+      cash_change = -value * share - fee
 
-        date = pd.to_datetime(transaction['date'])
-        action = transaction['action']
-        ticker = transaction['ticker']
-        share = transaction.get('share', 0)
-        price = transaction.get('price', 0)
-        amount = transaction.get('amount', 0)
-        fee = transaction.get('fee', 0)
+  if action == 'sell':
+      share_change = -share
+      cash_change = value * share + fee
 
-        shareChange = 0
-        cashChange = 0
+  if action == 'dividendCash':
+      cash_change = value
 
-        if action == 'buy':
-            shareChange = share
-            cashChange = -price * share - fee
-
-        if action == 'sell':
-            shareChange = -share
-            cashChange = price * share + fee
-
-        if action == 'dividendCash':
-            cashChange = amount
-
-        if action == 'adjustShare':
-            shareChange = share
+  if action == 'adjustShare':
+      share_change = shares
 
 
-        return {
-          'date': date,
-          'ticker': ticker,
-          'shareChange': shareChange,
-          'cashChange': cashChange
-        }
+  return {
+    'date': date,
+    'stock_symbol': stock_symbol,
+    'share_change': share_change,
+    'cash_change': cash_change
+  }
 
-    accountMovements = pd.DataFrame(map(transactionRecordToAccountMovement, transactions))
+def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str, db: Session):
 
-    tickersBalance = {}
+  transactions = db.Query(models.PortfolioStock.transactions)\
+    .filter(
+      models.PortfolioStock.portfolio_id == portfolio_id and
+      models.PortfolioStock.stock_symbol == stock_symbol
+    )\
+    .all()
 
-    for ticker, tickerMovements in accountMovements.groupby('ticker'):
+  start_date = min(map(lambda t: t['date'], transactions))
 
-        tickerMovements = tickerMovements.sort_values('date')
-        tickerMovements['cashes'] = np.cumsum(tickerMovements['cashChange'])
-        tickerMovements['shares'] = np.cumsum(tickerMovements['shareChange'])
+  stock_prices = db.Query(StockClosePrice)\
+    .filter(StockClosePrice.stock_symbol == stock_symbol)\
+    .filter(StockClosePrice.date >= start_date)\
+    .all()
 
-        tickersBalance[ticker] =             tickerMovements[['date', 'shares', 'cashes']]                 .drop_duplicates('date', keep='last')
-
-    return tickersBalance
-
-
-def mergeBalanceWithClosePrice(tickerBalance, ticker):
-
-    startDate = min(tickerBalance['date'])
-    closePrice = ydf[['Close']]
-    #closePrice = yf.Ticker(ticker).history(start='2020-07-02')[['Close']]
-
-    return closePrice         .merge(tickerBalance, how='outer', left_index = True, right_on='date')         .fillna(method='pad')         .fillna(0)         .reset_index(drop=True)
+  calculate_portfolio_stock(transactions, stock_prices)
 
 
+  return
 
-def calculateTickerDailyStat(tickerBalanceAndPriceDF):
+def get_portfolio_calculation_result(portfolio_id: int, db: Session):
 
-    resultDF = tickerBalanceAndPriceDF.reset_index(drop=True)
+  portfolio_stocks = db.Query(models.Portfolio.portfolio_stocks)\
+    .filter(models.Portfolio.portfolio_id == portfolio_id)\
+    .all()
 
-    resultDF['marketValue'] = resultDF['Close'] * resultDF['shares']
+  portfoliio_stocks_result = [
+    get_portfolio_stock_calculation_result(
+      portfolio_stock.portfolio_id,
+      portfolio_stock.stock,
+      db
+    )
+    for portfolio_stock in portfolio_stocks
+  ]
 
-    resultDF['netProfit'] = resultDF['marketValue'] + resultDF['cashes']
+  portfolio_result = calculate_portfolio(portfoliio_stocks_result)
 
-    resultDF['dailyProfit'] = np.diff(resultDF['netProfit'], prepend=0)
-
-    resultDF['cashFlow'] = np.diff(resultDF['cashes'], prepend=resultDF.head(1)['marketValue'])
-
-    startDate = min(resultDF['date'])
-    endDate = max(resultDF['date'])
-
-
-    def adjustedCost(df):
-        def calculateRowAdjustedCost(row):
-            subDF = df.iloc[:row.name+1]
-            weight = (row.date - subDF['date'] + timedelta(days=1)) / (row.date - startDate + timedelta(days=1))
-            return -(subDF['cashFlow'] * weight).sum()
-
-        return df.apply(calculateRowAdjustedCost, axis=1)
-
-    resultDF['adjustedCost'] = adjustedCost(resultDF[['date', 'cashFlow']])
-    resultDF['dollarWeightedReturnRate'] = resultDF['netProfit']/ adjustedCost(resultDF[['date', 'cashFlow']])
-
-    return resultDF.fillna(0)
-
-
-def calculatePortfolio(id):
-    return [{"portfolio_id": id}, {"time": datetime.now()}]
-
-
-
-
+  return {
+    portfolio_result: portfolio_result
+    portfoliio_stocks_result: portfoliio_stocks_result
+  }
