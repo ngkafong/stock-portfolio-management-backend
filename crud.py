@@ -5,13 +5,15 @@ import json
 import calculate
 
 def delete_garbage_stock(db: Session):
-    garbage_stock = db.query(models.Stock).filter(~models.Stock.portfolio_stocks.any()).first()
+    garbage_stock = db.query(models.Stock).filter(models.Stock.portfolio_stocks==None).first()
+    print("delete stock", garbage_stock.stock_symbol)
     db.delete(garbage_stock)
     db.commit()
     return
 
 def delete_garbage_portfolio_stock(db: Session):
     garbage_portfolio_stock = db.query(models.PortfolioStock).filter(models.PortfolioStock.transactions==None).first()
+    print("delete stock portfolio", garbage_portfolio_stock.portfolio_id, garbage_portfolio_stock.stock_symbol)
     db.delete(garbage_portfolio_stock)
     db.commit()
     return
