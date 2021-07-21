@@ -49,15 +49,15 @@ def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str,
     )\
     .all()
 
-  if ( db.query(models.StockClosePrice)
-    .filter(models.StockClosePrice.stock_symbol == stock_symbol)
+  if ( db.query(models.StockPrice)
+    .filter(models.StockPrice.stock_symbol == stock_symbol)
     .first()
     is None
   ):
     financeapi.update_stock_price_history(db, stock_symbol)
 
-  stock_prices = db.query(models.StockClosePrice)\
-    .filter(models.StockClosePrice.stock_symbol == stock_symbol)\
+  stock_prices = db.query(models.StockPrice)\
+    .filter(models.StockPrice.stock_symbol == stock_symbol)\
     .all()
 
   return calculate_portfolio_stock(transactions, stock_prices)

@@ -17,7 +17,7 @@ class Stock(Base):
     stock_symbol = Column(String, primary_key=True)
 
     portfolio_stocks = relationship('PortfolioStock', back_populates="stock", cascade="all, delete-orphan")
-    stock_close_prices = relationship('StockClosePrice', cascade="all, delete-orphan")
+    stock_prices = relationship('StockPrice', cascade="all, delete-orphan")
 
 class PortfolioStock(Base):
     __tablename__ = "portfolio_stocks"
@@ -48,10 +48,10 @@ class Transaction(Base):
                       {})
 
 
-class StockClosePrice(Base):
-    __tablename__ = "stock_close_prices"
+class StockPrice(Base):
+    __tablename__ = "stock_prices"
 
     stock_symbol = Column(String, ForeignKey('stocks.stock_symbol'), primary_key=True)
     date = Column(Date, primary_key=True)
-    close_price = Column(Numeric(10, 3), nullable=False)
+    price = Column(Numeric(10, 3), nullable=False)
 

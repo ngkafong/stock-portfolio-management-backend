@@ -83,10 +83,8 @@ class StockDetailed(StockBase):
     calculation_results: List[dict] = []
 
 
-class StockClosePrice(BaseModel):
-    __tablename__ = "stock_close_prices"
-
+class StockPrice(BaseModel):
     stock_symbol: str
     date: date
-    close_price: float
+    price: float
 
