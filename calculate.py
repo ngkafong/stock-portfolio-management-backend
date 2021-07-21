@@ -2,41 +2,91 @@ from sqlalchemy.orm import Session
 import models
 from operator import itemgetter
 import pandas as pd
+import numpy as np
 import financeapi
+from typing import List
+from datetime import timedelta
 
-def transaction_record_to_account_movement(transaction):
+def transaction_record_to_account_movement(transaction: dict):
+
+  # convert different types of transaction to generic movement
 
   date, action, stock_symbol, shares, value, fee = \
     itemgetter('date', 'action', 'stock_symbol', 'shares', 'value', 'fee')(transaction)
 
   share_change = 0
-  cash_change = 0
+  cost_change = 0
 
   if action == 'buy':
       share_change = shares
-      cash_change = -value * shares - fee
+      cost_change = value * shares + fee
 
   if action == 'sell':
       share_change = -shares
-      cash_change = value * shares + fee
+      cost_change = - value * shares - fee
 
   if action == 'dividend-cash':
-      cash_change = value - fee
+      cost_change = -value + fee
 
   if action == 'adjustShare':
       share_change = shares
-      cash_cahgne = - fee
+      cost_cahgne = fee
 
 
   return {
     'date': date,
     'stock_symbol': stock_symbol,
     'share_change': share_change,
-    'cash_change': cash_change,
+    'cost_change': cost_change,
   }
 
+def stock_movements_to_balance(movements_df: pd.DataFrame):
 
-def calculate_portfolio_stock(transactions, stock_prices):
+  # convert movements to cumulative balance df ['date', 'cost', 'share']
+  balance_df = movements_df\
+    .groupby('date')\
+    .sum()\
+    .sort_values('date')
+
+  balance_df['cost'] = np.cumsum(movements_df['cost_change'])
+  balance_df['share'] = np.cumsum(movements_df['share_change'])
+
+  balance_df = balance_df[['date', 'cost', 'share']]
+
+  return balance_df
+
+def calculate_balance_statistics(balance_df: pd.DataFrame):
+
+  # add column ['market_value', 'net_profit', 'net_profit_change', 'net_profit_change_percentage',
+  # 'return_rate', 'money_weighted_return_rate', 'time_weighted_return_rate']
+
+  def calculate_adjusted_cost(df):
+    start_date = df['date'].iloc[0]
+    def calculate_adjusted_cost_row(row):
+      sub_df = df.iloc[:row.name-1]
+      weight = (row.date - sub_df['date'] + timedelta(days=1)) / (row.date - start_date + timedelta(days=1))
+      return -(sub_df['cashFlow'] * weight).sum()
+
+  balance_df['market_value'] = balance_df['price'] * balance_df['share']
+  balance_df['net_profit'] = balance_df['market_value'] - balance_df['cost']
+  balance_df['daily_profit'] = np.diff(balance_df['net_profit'], prepend=0)
+
+
+
+  return balance_df
+
+
+def calculate_portfolio_stock(transactions: List[dict], stock_prices: List[dict]):
+  account_movements_df = pd.DataFrame(
+    map(transaction_record_to_account_movement, transactions)
+  )
+  
+  balance_df = stock_movements_to_balance(account_movements_df)
+
+  stock_prices_df = pd.DataFrame(stock_prices)
+
+
+
   return [{"calculate_portfolio_stock": "TODO"}]
 
 
