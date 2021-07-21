@@ -59,10 +59,13 @@ class PortfolioStockBase(BaseModel):
 class PortfolioStockCreate(PortfolioStockBase):
     pass
 
+class PortfolioStock(PortfolioStockBase):
+    class Config:
+        orm_mode = True
+
 
 class StockBase(BaseModel):
     stock_symbol: str
-    name: str
 
 
 class StockCreate(StockBase):

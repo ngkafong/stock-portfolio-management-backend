@@ -3,8 +3,15 @@ import models
 import schemas
 import json
 
+def delete_garbage_stock(db: Session):
+    garbage_stock = db.query(models.Stock).filter(~models.Stock.portfolio_stocks.any()).first()
+    db.delete(garbage_stock)
+    db.commit()
+    return
+
 def delete_garbage_portfolio_stock(db: Session):
-    db.query(models.PortfolioStock).filter(not models.PortfolioStock.transactions).delete()
+    garbage_portfolio_stock = db.query(models.PortfolioStock).filter(models.PortfolioStock.transactions==None).first()
+    db.delete(garbage_portfolio_stock)
     db.commit()
     return
 
@@ -31,7 +38,16 @@ def get_transaction(db: Session, transaction_id: int):
 def get_transactions(db: Session):
     return db.query(models.Transaction).all()
 
+def create_stock(db: Session, stock: schemas.StockCreate):
+    print("create stock", stock)
+    db_stock = models.Stock(**stock.dict())
+    db.add(db_stock)
+    db.commit()
+    db.refresh(db_stock)
+    return db_stock
+
 def create_portfolio_stock(db: Session, portfolio_stock: schemas.PortfolioStockCreate):
+    print("create portfolio stock", portfolio_stock)
     db_portfolio_stock = models.PortfolioStock(**portfolio_stock.dict())
     db.add(db_portfolio_stock)
     db.commit()
@@ -48,6 +64,10 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate):
         portfolio_stock = schemas.PortfolioStockCreate.parse_obj(transaction.dict())
         create_portfolio_stock(db, portfolio_stock)
 
+    if db_transaction.portfolio_stock.stock is None:
+        stock = schemas.StockCreate.parse_obj(transaction.dict())
+        create_stock(db, stock)
+
     return db_transaction
 
 
@@ -60,17 +80,24 @@ def update_transaction(db: Session, transaction_id: int, transaction: schemas.Tr
         portfolio_stock = schemas.PortfolioStockCreate.parse_obj(transaction.dict())
         create_portfolio_stock(db, portfolio_stock)
 
+    if db_transaction.portfolio_stock.stock is None:
+        stock = schemas.StockCreate.parse_obj(transaction.dict())
+        create_stock(db, stock)
+
     delete_garbage_portfolio_stock(db)
+    delete_garbage_stock(db)
     return db_transaction
 
 def delete_transaction(db: Session, transaction_id: int):
-    delete_result = db.query(models.Transaction).filter(models.Transaction.transaction_id == transaction_id).delete()
+    delete_transaction = db.query(models.Transaction).filter(models.Transaction.transaction_id == transaction_id).first()
+    db.delete(delete_transaction)
     db.commit()
     delete_garbage_portfolio_stock(db)
-    return delete_result
+    delete_garbage_stock(db)
+    return delete_transaction
 
-def search_stocks(db: Session, search_str: str):
-    return db.query(models.Stock).filter(
-        models.Stock.stock_symbol.like("{}%".format(search_str)) |
-        models.Stock.name.like("%{}%".format(search_str))
-    ).all()
+def get_portfolio_stocks(db: Session):
+    return db.query(models.PortfolioStock).all()
+
+def get_stocks(db: Session):
+    return db.query(models.Stock).all()

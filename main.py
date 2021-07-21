@@ -20,14 +20,6 @@ def get_db():
     finally:
         db.close()
 
-@app.on_event("startup")
-async def initialize():
-    db = SessionLocal()
-    if db.query(models.Stock).first() is None:
-        financeapi.update_stock_list(db)
-    db.close()
-    return
-
 
 @app.get("/")
 def read_root():
@@ -69,6 +61,10 @@ def newPortfolio(portfolio: schemas.PortfolioCreate, db: Session = Depends(get_d
     return crud.create_portfolio(db=db, portfolio=portfolio)
 
 
-@app.get("/stocks/{search_str}", response_model=List[schemas.Stock])
-def getStocks(search_str: str, db: Session = Depends(get_db)):
-    return crud.search_stocks(db, search_str)
+@app.get("/stocks", response_model=List[schemas.Stock])
+def getStocks(db: Session = Depends(get_db)):
+    return crud.get_stocks(db)
+
+@app.get("/portfolio-stocks", response_model=List[schemas.PortfolioStock])
+def getStocks(db: Session = Depends(get_db)):
+    return crud.get_portfolio_stocks(db)

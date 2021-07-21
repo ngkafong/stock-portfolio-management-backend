@@ -15,7 +15,6 @@ class Stock(Base):
     __tablename__ = "stocks"
 
     stock_symbol = Column(String, primary_key=True)
-    name = Column(String)
 
     portfolio_stocks = relationship('PortfolioStock', back_populates="stock", cascade="all, delete-orphan")
     stock_close_prices = relationship('StockClosePrice', cascade="all, delete-orphan")
