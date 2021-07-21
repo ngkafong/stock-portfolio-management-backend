@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 import models
 import schemas
 import json
+import calculate
 
 def delete_garbage_stock(db: Session):
     garbage_stock = db.query(models.Stock).filter(~models.Stock.portfolio_stocks.any()).first()
@@ -98,6 +99,25 @@ def delete_transaction(db: Session, transaction_id: int):
 
 def get_portfolio_stocks(db: Session):
     return db.query(models.PortfolioStock).all()
+
+
+def get_portfolio_stock(db: Session, portfolio_id: int, stock_symbol: str):
+
+    calculation_results = calculate\
+        .get_portfolio_stock_calculation_result(portfolio_id, stock_symbol, db)
+
+    db_portfolio_stock = db.query(models.PortfolioStock)\
+        .filter(
+            (models.PortfolioStock.portfolio_id == portfolio_id) &
+            (models.PortfolioStock.stock_symbol == stock_symbol)
+        )\
+        .first()
+
+
+    return {
+        **vars(db_portfolio_stock),
+        "calculation_results": calculation_results
+    }
 
 def get_stocks(db: Session):
     return db.query(models.Stock).all()

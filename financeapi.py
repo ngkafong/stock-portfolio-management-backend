@@ -12,7 +12,7 @@ import schemas
 def update_stock_price_history(db: Session, stock_symbol: str):
 
   stock = yf.Ticker(stock_symbol)
-  close_price = msft.history(period="max")\
+  close_price = stock.history(period="max")\
     .reset_index()\
     .rename(columns = { 'Close': 'close_price', 'Date': 'date'})
 

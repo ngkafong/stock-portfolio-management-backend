@@ -63,6 +63,8 @@ class PortfolioStock(PortfolioStockBase):
     class Config:
         orm_mode = True
 
+class PortfolioStockWithCalculationResult(PortfolioStockBase):
+    calculation_results: List[dict]
 
 class StockBase(BaseModel):
     stock_symbol: str

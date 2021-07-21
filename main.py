@@ -66,5 +66,10 @@ def getStocks(db: Session = Depends(get_db)):
     return crud.get_stocks(db)
 
 @app.get("/portfolio-stocks", response_model=List[schemas.PortfolioStock])
-def getStocks(db: Session = Depends(get_db)):
+def getPortfolioStocks(db: Session = Depends(get_db)):
     return crud.get_portfolio_stocks(db)
+
+
+@app.get("/portfolio-stocks/{portfolio_id},{stock_symbol}", response_model=schemas.PortfolioStockWithCalculationResult)
+def getPortfolioStock(portfolio_id: int, stock_symbol: str, db: Session = Depends(get_db)):
+    return crud.get_portfolio_stock(db, portfolio_id, stock_symbol)
