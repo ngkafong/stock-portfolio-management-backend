@@ -17,29 +17,29 @@ def transaction_record_to_account_movement(transaction: dict):
   date, action, stock_symbol, shares, value, fee = \
     itemgetter('date', 'action', 'stock_symbol', 'shares', 'value', 'fee')(transaction)
 
-  share_change = 0
+  shares_change = 0
   cost_change = 0
 
   if action == 'buy':
-      share_change = shares
+      shares_change = shares
       cost_change = value * shares + fee
 
   if action == 'sell':
-      share_change = -shares
+      shares_change = -shares
       cost_change = - value * shares - fee
 
   if action == 'dividend-cash':
       cost_change = -value + fee
 
-  if action == 'dividend-share':
-      share_change = shares
+  if action == 'dividend-shares':
+      shares_change = shares
       cost_change = fee
 
 
   return {
     'date': date,
     'stock_symbol': stock_symbol,
-    'share_change': share_change,
+    'shares_change': shares_change,
     'cost_change': cost_change,
   }
 
@@ -47,7 +47,7 @@ def transaction_record_to_account_movement(transaction: dict):
 
 def stock_movements_to_balance(movements_df: pd.DataFrame):
 
-  # convert movements to cumulative balance df ['date', 'cost', 'share']
+  # convert movements to cumulative balance df ['date', 'cost', 'shares']
   balance_df = movements_df\
     .groupby('date')\
     .sum()\
@@ -55,9 +55,9 @@ def stock_movements_to_balance(movements_df: pd.DataFrame):
     .reset_index(drop=True)
 
   balance_df['cost'] = np.cumsum(movements_df['cost_change'])
-  balance_df['share'] = np.cumsum(movements_df['share_change'])
+  balance_df['shares'] = np.cumsum(movements_df['shares_change'])
 
-  balance_df = balance_df[['date', 'cost', 'share']]
+  balance_df = balance_df[['date', 'cost', 'shares']]
 
   return balance_df
 
@@ -110,7 +110,7 @@ def calculate_portfolio_stock(transactions: List[dict], stock_prices: List[dict]
     fill_method='ffill'
   ).dropna()
 
-  balance_price_df['market_value'] = balance_price_df['share'] * balance_price_df['price']
+  balance_price_df['market_value'] = balance_price_df['shares'] * balance_price_df['price']
 
   result_df = calculate_return_statistics(balance_price_df)
 
