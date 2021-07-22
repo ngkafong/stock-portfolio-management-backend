@@ -46,7 +46,8 @@ def stock_movements_to_balance(movements_df: pd.DataFrame):
   balance_df = movements_df\
     .groupby('date')\
     .sum()\
-    .sort_values('date')
+    .sort_values('date')\
+    .reset_index(drop=True)
 
   balance_df['cost'] = np.cumsum(movements_df['cost_change'])
   balance_df['share'] = np.cumsum(movements_df['share_change'])
@@ -55,23 +56,32 @@ def stock_movements_to_balance(movements_df: pd.DataFrame):
 
   return balance_df
 
-def calculate_balance_statistics(balance_df: pd.DataFrame):
+def calculate_profit_statistics(balance_df: pd.DataFrame):
 
-  # add column ['market_value', 'net_profit', 'net_profit_change', 'net_profit_change_percentage',
+  # add column ['market_value', 'net_profit', 'daily_profit', 'daily_profit_percentage',
   # 'return_rate', 'money_weighted_return_rate', 'time_weighted_return_rate']
 
   def calculate_adjusted_cost(df):
+    # calculate adjusted cost according to formula of money weighted return rate
     start_date = df['date'].iloc[0]
+    df['cash_flow'] = np.diff(resultDF['cost'], prepend=0)
+
     def calculate_adjusted_cost_row(row):
-      sub_df = df.iloc[:row.name-1]
+      sub_df = df.iloc[:row.name+1]
       weight = (row.date - sub_df['date'] + timedelta(days=1)) / (row.date - start_date + timedelta(days=1))
-      return -(sub_df['cashFlow'] * weight).sum()
+      return (sub_df['cash_flow'] * weight).sum()
+
+    result = df.apply(calculate_adjusted_cost_row, axis=1)
+    df.drop(columns='cash_flow')
+    return result
 
   balance_df['market_value'] = balance_df['price'] * balance_df['share']
   balance_df['net_profit'] = balance_df['market_value'] - balance_df['cost']
   balance_df['daily_profit'] = np.diff(balance_df['net_profit'], prepend=0)
-
-
+  balance_df['daily_profit_percentage'] = balance_df['daily_profit'] / balance_df['cost']
+  balance_df['return_rate'] = balance_df['net_profit'] / balance_df['cost']
+  balance_df['money_weighted_return_rate'] = balance_df['net_profit'] / calculate_adjusted_cost(balance_df)
+  balance_df['time_weighted_return_rate'] = np.cumprod(balance_df['daily_profit_percentage'] + 1)
 
   return balance_df
 
@@ -80,7 +90,7 @@ def calculate_portfolio_stock(transactions: List[dict], stock_prices: List[dict]
   account_movements_df = pd.DataFrame(
     map(transaction_record_to_account_movement, transactions)
   )
-  
+
   balance_df = stock_movements_to_balance(account_movements_df)
 
   stock_prices_df = pd.DataFrame(stock_prices)
