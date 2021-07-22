@@ -28,4 +28,15 @@ def update_stock_price_history(db: Session, stock_symbol: str):
   prices.apply(update_stock_price_daily, axis=1)
   db.commit()
   print('stock history updated', stock_symbol)
+
+  return
+
+
+
+def update_all_stock_price_history(db: Session):
+
+  stocks = db.query(models.Stock).all()
+  for stock in stocks:
+    update_stock_price_history(db, stock.stock_symbol)
+
   return
