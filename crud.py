@@ -117,7 +117,7 @@ def get_portfolio_stock(db: Session, portfolio_id: int, stock_symbol: str):
 
 
     return {
-        **vars(db_portfolio_stock),
+        **(db_portfolio_stock.__dict__),
         "calculation_results": calculation_results
     }
 

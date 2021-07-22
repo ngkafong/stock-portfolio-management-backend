@@ -1,4 +1,3 @@
-from pandas.core.reshape.merge import merge
 from sqlalchemy.orm import Session
 import models
 from operator import itemgetter
@@ -49,9 +48,8 @@ def stock_movements_to_balance(movements_df: pd.DataFrame):
 
   # convert movements to cumulative balance df ['date', 'cost', 'shares']
   balance_df = movements_df\
-    .groupby('date')\
+    .groupby('date', sort=True, as_index=False)\
     .sum()\
-    .sort_values('date')\
     .reset_index(drop=True)
 
   balance_df['cost'] = np.cumsum(movements_df['cost_change'])
@@ -66,7 +64,7 @@ def stock_movements_to_balance(movements_df: pd.DataFrame):
 def calculate_return_statistics(asset_df: pd.DataFrame):
 
   # input: df with column [ 'date', 'market_value', 'cost', ... ]
-  # output: df with column [ ...input_colums, 'net_profit', 'daily_profit', 'daily_profit_percentage',
+  # output: df with column [ ...input_colums, 'net_profit', 'daily_profit', 'daily_profit_rate',
   # 'return_rate', 'money_weighted_return_rate', 'time_weighted_return_rate']
 
 
@@ -80,32 +78,31 @@ def calculate_return_statistics(asset_df: pd.DataFrame):
       return (cash_flow[:row.name+1] * weight).sum()
 
     result = df.apply(calculate_adjusted_cost_row, axis=1)
-    df.drop(columns='cash_flow')
     return result
 
   result_df = asset_df.copy()
   result_df['net_profit'] = result_df['market_value'] - result_df['cost']
   result_df['daily_profit'] = np.diff(result_df['net_profit'], prepend=0)
-  result_df['daily_profit_percentage'] = result_df['daily_profit'] / result_df['cost']
+  result_df['daily_profit_rate'] = result_df['daily_profit'] / result_df['cost']
   result_df['return_rate'] = result_df['net_profit'] / result_df['cost']
   result_df['money_weighted_return_rate'] = result_df['net_profit'] / calculate_adjusted_cost(result_df)
-  result_df['time_weighted_return_rate'] = np.cumprod(result_df['daily_profit_percentage'] + 1)
+  result_df['time_weighted_return_rate'] = np.cumprod(result_df['daily_profit_rate'] + 1)
 
   return result_df
 
 
 
-def calculate_portfolio_stock(transactions: List[dict], stock_prices: List[dict]):
+def calculate_portfolio_stock(transactions_df: pd.DataFrame, stock_prices_df: pd.DataFrame):
 
-  account_movements_df = pd.DataFrame(
-    map(transaction_record_to_account_movement, transactions)
-  )
+  account_movements_df = transactions_df.apply(
+    transaction_record_to_account_movement, axis=1
+  ).apply(pd.Series)
 
   balance_df = stock_movements_to_balance(account_movements_df)
-  stock_price_df = pd.DataFrame(stock_prices)[['date', 'price']].sort_values('date')
+  stock_prices_df = stock_prices_df[['date', 'price']].sort_values('date')
 
   balance_price_df = pd.merge_ordered(
-    balance_df, stock_price_df,
+    balance_df, stock_prices_df,
     on='date',
     fill_method='ffill'
   ).dropna()
@@ -114,18 +111,19 @@ def calculate_portfolio_stock(transactions: List[dict], stock_prices: List[dict]
 
   result_df = calculate_return_statistics(balance_price_df)
 
-  return result_df.dict()
+  return result_df
 
 
 
 def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str, db: Session):
 
-  transactions = db.query(models.PortfolioStock.transactions)\
+  transactions_query = db.query(models.Transaction)\
     .filter(
-      (models.PortfolioStock.portfolio_id == portfolio_id) &
-      (models.PortfolioStock.stock_symbol == stock_symbol)
-    )\
-    .all()
+      (models.Transaction.portfolio_id == portfolio_id) &
+      (models.Transaction.stock_symbol == stock_symbol)
+    )
+  
+  transactions_df = pd.read_sql(transactions_query.statement, db.bind)
 
   # fetch from api if database contain no price data
   if ( db.query(models.StockPrice)
@@ -135,11 +133,12 @@ def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str,
   ):
     financeapi.update_stock_price_history(db, stock_symbol)
 
-  stock_prices = db.query(models.StockPrice)\
-    .filter(models.StockPrice.stock_symbol == stock_symbol)\
-    .all()
+  stock_prices_query = db.query(models.StockPrice)\
+    .filter(models.StockPrice.stock_symbol == stock_symbol)
+  
+  stock_prices_df = pd.read_sql(stock_prices_query.statement, db.bind)
 
-  return calculate_portfolio_stock(transactions, stock_prices)
+  return calculate_portfolio_stock(transactions_df, stock_prices_df).to_dict('records')
 
 
 
