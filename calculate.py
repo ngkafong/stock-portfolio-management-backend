@@ -28,7 +28,7 @@ def transaction_record_to_account_movement(transaction: dict):
   if action == 'dividend-cash':
       cost_change = -value + fee
 
-  if action == 'adjustShare':
+  if action == 'dividend-share':
       share_change = shares
       cost_cahgne = fee
 
@@ -56,7 +56,16 @@ def stock_movements_to_balance(movements_df: pd.DataFrame):
 
   return balance_df
 
-def calculate_profit_statistics(balance_df: pd.DataFrame):
+def merge_balance_with_prices(balance_df: pd.DataFrame, stock_price_df: pd.DataFrame):
+
+  return balance_df\
+    .merge(stock_price_df, how='outer', on='date')\
+    .fillna(method='ffill')\
+    .dropna()\
+    .sort_values('date')\
+    .reset_index(drop=True)
+
+def calculate_profit_statistics(balance_price_df: pd.DataFrame):
 
   # add column ['market_value', 'net_profit', 'daily_profit', 'daily_profit_percentage',
   # 'return_rate', 'money_weighted_return_rate', 'time_weighted_return_rate']
@@ -75,15 +84,16 @@ def calculate_profit_statistics(balance_df: pd.DataFrame):
     df.drop(columns='cash_flow')
     return result
 
-  balance_df['market_value'] = balance_df['price'] * balance_df['share']
-  balance_df['net_profit'] = balance_df['market_value'] - balance_df['cost']
-  balance_df['daily_profit'] = np.diff(balance_df['net_profit'], prepend=0)
-  balance_df['daily_profit_percentage'] = balance_df['daily_profit'] / balance_df['cost']
-  balance_df['return_rate'] = balance_df['net_profit'] / balance_df['cost']
-  balance_df['money_weighted_return_rate'] = balance_df['net_profit'] / calculate_adjusted_cost(balance_df)
-  balance_df['time_weighted_return_rate'] = np.cumprod(balance_df['daily_profit_percentage'] + 1)
+  result_df = result_df.copy()
+  result_df['market_value'] = result_df['price'] * result_df['share']
+  result_df['net_profit'] = result_df['market_value'] - result_df['cost']
+  result_df['daily_profit'] = np.diff(result_df['net_profit'], prepend=0)
+  result_df['daily_profit_percentage'] = result_df['daily_profit'] / result_df['cost']
+  result_df['return_rate'] = result_df['net_profit'] / result_df['cost']
+  result_df['money_weighted_return_rate'] = result_df['net_profit'] / calculate_adjusted_cost(result_df)
+  result_df['time_weighted_return_rate'] = np.cumprod(result_df['daily_profit_percentage'] + 1)
 
-  return balance_df
+  return result_df
 
 
 def calculate_portfolio_stock(transactions: List[dict], stock_prices: List[dict]):
@@ -92,12 +102,13 @@ def calculate_portfolio_stock(transactions: List[dict], stock_prices: List[dict]
   )
 
   balance_df = stock_movements_to_balance(account_movements_df)
+  stock_price_df = pd.DataFrame(stock_prices)[['date', 'price']]
 
-  stock_prices_df = pd.DataFrame(stock_prices)
+  balance_price_df = merge_balance_with_prices(balance_df, stock_price_df)
 
+  result_df = calculate_profit_statistics(balance_price_df)
 
-
-  return [{"calculate_portfolio_stock": "TODO"}]
+  return result_df.to_dict('records')
 
 
 def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str, db: Session):
