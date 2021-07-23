@@ -12,9 +12,6 @@ class TransactionBase(BaseModel):
     value: Optional[float]
     fee: Optional[float]
 
-    class Config:
-        orm_mode = True
-
 
 
 class TransactionCreate(TransactionBase):
@@ -24,10 +21,27 @@ class TransactionCreate(TransactionBase):
 
 class Transaction(TransactionBase):
     transaction_id: int
+    class Config:
+        orm_mode = True
 
 
 class TransactionUpdate(TransactionBase):
     pass
+
+
+class PortfolioStockBase(BaseModel):
+    portfolio_id: int
+    stock_symbol: str
+
+class PortfolioStockCreate(PortfolioStockBase):
+    pass
+
+class PortfolioStock(PortfolioStockBase):
+    class Config:
+        orm_mode = True
+
+class PortfolioStockWithCalculationResult(PortfolioStockBase):
+    calculation_results: List[dict]
 
 
 
@@ -45,26 +59,17 @@ class PortfolioUpdate(PortfolioBase):
 
 
 
-class Portfolio(BaseModel):
+class Portfolio(PortfolioBase):
     portfolio_id: int
-    title: str
-    calculation_results: List[dict] = []
+    portfolio_stocks: List[PortfolioStock]
     class Config:
         orm_mode = True
 
-class PortfolioStockBase(BaseModel):
-    portfolio_id: int
-    stock_symbol: str
 
-class PortfolioStockCreate(PortfolioStockBase):
-    pass
-
-class PortfolioStock(PortfolioStockBase):
-    class Config:
-        orm_mode = True
-
-class PortfolioStockWithCalculationResult(PortfolioStockBase):
+class PortfolioWithCalculationResult(Portfolio):
     calculation_results: List[dict]
+    portfolio_stocks: List[PortfolioStockWithCalculationResult]
+
 
 class StockBase(BaseModel):
     stock_symbol: str
@@ -78,9 +83,6 @@ class Stock(StockBase):
     class Config:
         orm_mode = True
 
-
-class StockDetailed(StockBase):
-    calculation_results: List[dict] = []
 
 
 class StockPrice(BaseModel):

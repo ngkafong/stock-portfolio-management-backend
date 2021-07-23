@@ -63,7 +63,7 @@ def getPortfolios(db: Session = Depends(get_db)):
 def getPortfolio(portfolio_id: int, db: Session = Depends(get_db)):
     return crud.get_portfolio(db=db, portfolio_id=portfolio_id)
 
-@app.post("/portfolios", response_model=schemas.Portfolio)
+@app.post("/portfolios", response_model=schemas.PortfolioWithCalculationResult)
 def newPortfolio(portfolio: schemas.PortfolioCreate, db: Session = Depends(get_db)):
     return crud.create_portfolio(db=db, portfolio=portfolio)
 

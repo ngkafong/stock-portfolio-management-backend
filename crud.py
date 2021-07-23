@@ -19,8 +19,19 @@ def delete_garbage_portfolio_stock(db: Session):
     return
 
 def get_portfolio(db: Session, portfolio_id: int):
-    return db.query(models.Portfolio).filter(models.Portfolio.portfolio_id == portfolio_id).first()
 
+    calculation_results = calculate.get_portfolio_calculation_result(portfolio_id, db)
+
+    db_portfolio = db.query(models.Portfolio).filter(models.Portfolio.portfolio_id == portfolio_id).first()
+
+    return {
+        **(db_portfolio.__dict__),
+        "calculation_results": calculation_results["portfolio_result"],
+        "portfolio_stocks": [{
+            **(portfolio_stock.__dict__),
+            "calculation_results": calculation_results["portfolio_stocks_result"][portfolio_stock]
+        } for portfolio_stock in db_portfolio.portfolio_stocks]
+    }
 
 def get_portfolios(db: Session):
     return db.query(models.Portfolio).all()
