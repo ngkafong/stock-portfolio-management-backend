@@ -1,0 +1,11 @@
+[
+    { "portfolio_id": 1, "stock_symbol": "WCLD", "action": "buy", "date": "2020-06-15", "shares": 11, "value": 35.38 },
+    { "portfolio_id": 1, "stock_symbol": "SOXX", "action": "buy", "date": "2020-07-01", "shares": 2, "value": 269.23 },
+    { "portfolio_id": 1, "stock_symbol": "WCLD", "action": "buy", "date": "2020-07-13", "shares": 10, "value": 41.48 },
+    { "portfolio_id": 1, "stock_symbol": "SOXX", "action": "buy", "date": "2020-07-28", "shares": 2, "value": 280.00 },
+    { "portfolio_id": 2, "stock_symbol": "SGOL", "action": "buy", "date": "2020-07-30", "shares": 107, "value": 18.7 },
+    { "portfolio_id": 2, "stock_symbol": "SGOL", "action": "buy", "date": "2020-08-05", "shares": 52, "value": 19.6 },
+    { "portfolio_id": 1, "stock_symbol": "XBI", "action": "buy", "date": "2020-08-06", "shares": 3, "value": 113.80 },
+    { "portfolio_id": 1, "stock_symbol": "WCLD", "action": "buy", "date": "2020-08-19", "shares": 9, "value": 40.95 },
+    { "portfolio_id": 1, "stock_symbol": "SOXX", "action": "buy", "date": "2020-08-28", "shares": 1, "value": 307.77 }
+]
