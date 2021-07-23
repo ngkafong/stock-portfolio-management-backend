@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+sqlalchemy
+fastapi-utils
+requests
+pandas
+yfinance
