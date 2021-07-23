@@ -1,7 +1,8 @@
 import requests
 import json
+import os
 
-base_url = "http://localhost:8000/"
+base_url = "http://localhost:8080/"
 
 headers = {
   'accept': 'application/json',
@@ -10,7 +11,9 @@ headers = {
 
 if __name__ == '__main__':
 
-  with open('portfolios.json') as f:
+  script_dir = os.path.dirname(__file__)
+
+  with open(script_dir+'/portfolios.json') as f:
     portfolios = json.load(f)
 
   for portfolio in portfolios:
@@ -20,7 +23,7 @@ if __name__ == '__main__':
     except:
       print(r.status_code)
 
-  with open('transactions.json') as f:
+  with open(script_dir+'/transactions.json') as f:
     transactions = json.load(f)
 
   for transaction in transactions:

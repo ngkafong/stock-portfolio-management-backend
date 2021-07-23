@@ -1,5 +1,7 @@
 .ipynb_checkpoints/
 __pycache__/
 data/*
+logs/*
 
 !data/README.md
+!logs/README.md

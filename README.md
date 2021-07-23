@@ -1,3 +1,17 @@
+### run dev: 
+```
+uvicorn main:app --reload --port 8080
+```
+### run prod:
+```
+gunicorn main:app -w 2 -k uvicorn.workers.UvicornWorker -b :8080 --access-logfile logs/access_log 
+```
+
+## kill prod:
+```
+pkill -f gunicorn
+```
+
 TODO List:
 
 construct demo data.
