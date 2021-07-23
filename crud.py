@@ -29,7 +29,7 @@ def get_portfolio(db: Session, portfolio_id: int):
         "calculation_results": calculation_results["portfolio_result"],
         "portfolio_stocks": [{
             **(portfolio_stock.__dict__),
-            "calculation_results": calculation_results["portfolio_stocks_result"][portfolio_stock]
+            "calculation_results": calculation_results["portfolio_stocks_result"][portfolio_stock.stock_symbol]
         } for portfolio_stock in db_portfolio.portfolio_stocks]
     }
 

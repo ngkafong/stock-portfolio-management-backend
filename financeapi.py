@@ -1,6 +1,5 @@
 import yfinance as yf
 from sqlalchemy.orm import Session
-import requests
 import pandas as pd
 from datetime import date
 from typing import Optional

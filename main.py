@@ -21,7 +21,7 @@ def get_db():
     finally:
         db.close()
 
-@app.on_event("startup")
+# @app.on_event("startup")
 @repeat_every(seconds=60 * 60 * 6)
 def update_all_stock_history():
     db = SessionLocal()
@@ -59,11 +59,11 @@ def deleteTransaction(transaction_id: int, db: Session = Depends(get_db)):
 def getPortfolios(db: Session = Depends(get_db)):
     return crud.get_portfolios(db=db)
 
-@app.get("/portfolios/{portfolio_id}", response_model=schemas.Portfolio)
+@app.get("/portfolios/{portfolio_id}", response_model=schemas.PortfolioWithCalculationResult)
 def getPortfolio(portfolio_id: int, db: Session = Depends(get_db)):
     return crud.get_portfolio(db=db, portfolio_id=portfolio_id)
 
-@app.post("/portfolios", response_model=schemas.PortfolioWithCalculationResult)
+@app.post("/portfolios", response_model=schemas.Portfolio)
 def newPortfolio(portfolio: schemas.PortfolioCreate, db: Session = Depends(get_db)):
     return crud.create_portfolio(db=db, portfolio=portfolio)
 

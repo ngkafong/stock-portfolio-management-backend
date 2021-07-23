@@ -67,7 +67,6 @@ def calculate_return_statistics(asset_df: pd.DataFrame):
   # output: df with column [ ...input_colums, 'net_profit', 'daily_profit', 'daily_profit_rate',
   # 'return_rate', 'money_weighted_return_rate', 'time_weighted_return_rate']
 
-
   def calculate_adjusted_cost(df):
     # calculate adjusted cost according to formula of money weighted return rate
     start_date = df['date'].iloc[0]
@@ -80,14 +79,14 @@ def calculate_return_statistics(asset_df: pd.DataFrame):
     result = df.apply(calculate_adjusted_cost_row, axis=1)
     return result
 
-  result_df = asset_df.copy()
+  result_df = asset_df.copy().reset_index(drop=True)
   result_df['net_profit'] = result_df['market_value'] - result_df['cost']
   result_df['daily_profit'] = np.diff(result_df['net_profit'], prepend=0)
   result_df['daily_profit_rate'] = result_df['daily_profit'] / result_df['cost']
   result_df['return_rate'] = result_df['net_profit'] / result_df['cost']
-  result_df['money_weighted_return_rate'] = result_df['net_profit'] / calculate_adjusted_cost(result_df)
-  result_df['time_weighted_return_rate'] = np.cumprod(result_df['daily_profit_rate'] + 1)
 
+  result_df['money_weighted_return_rate'] = result_df['net_profit'] / calculate_adjusted_cost(result_df)
+  result_df['time_weighted_return_rate'] = np.cumprod(result_df['daily_profit_rate'] + 1) - 1
   return result_df
 
 
@@ -122,7 +121,7 @@ def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str,
       (models.Transaction.portfolio_id == portfolio_id) &
       (models.Transaction.stock_symbol == stock_symbol)
     )
-  
+
   transactions_df = pd.read_sql(transactions_query.statement, db.bind)
 
   # fetch from api if database contain no price data
@@ -135,7 +134,7 @@ def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str,
 
   stock_prices_query = db.query(models.StockPrice)\
     .filter(models.StockPrice.stock_symbol == stock_symbol)
-  
+
   stock_prices_df = pd.read_sql(stock_prices_query.statement, db.bind)
 
   return calculate_portfolio_stock(transactions_df, stock_prices_df).to_dict('records')
@@ -153,39 +152,40 @@ def calculate_multiple_assets(assets_result: dict):
       for asset_result in assets_result.values()
     ],
     axis=1,
-    keys=assets_result.keys()
+    keys=assets_result.keys(),
+    sort=True
   ).reset_index()
 
 
   merged_df['cost'] = merged_df.xs('cost', axis=1, level=1).sum(axis=1)
   merged_df['market_value'] = merged_df.xs('market_value', axis=1, level=1).sum(axis=1)
 
-  result_df = calculate_return_statistics(merged_df[['date', 'cost', 'market_value']])
+  result_df = calculate_return_statistics(merged_df[['date', 'cost', 'market_value']].droplevel(1, axis=1))
 
-  return result_df.to_dict('records')
+  return result_df
 
 
 
 def get_portfolio_calculation_result(portfolio_id: int, db: Session):
 
-  portfolio_stocks = db.query(models.Portfolio.portfolio_stocks)\
-    .filter(models.Portfolio.portfolio_id == portfolio_id)\
+  portfolio_stocks = db.query(models.PortfolioStock)\
+    .filter(models.PortfolioStock.portfolio_id == portfolio_id)\
     .all()
 
   portfoliio_stocks_result = {
     portfolio_stock.stock_symbol: get_portfolio_stock_calculation_result(
       portfolio_stock.portfolio_id,
-      portfolio_stock.stock,
+      portfolio_stock.stock_symbol,
       db
     )
     for portfolio_stock in portfolio_stocks
   }
 
-  portfolio_result = calculate_multiple_assets(portfoliio_stocks_result)
+  portfolio_result = calculate_multiple_assets(portfoliio_stocks_result).to_dict('records')
 
   return {
-    portfolio_result: portfolio_result,
-    portfoliio_stocks_result: portfoliio_stocks_result
+    "portfolio_result": portfolio_result,
+    "portfolio_stocks_result": portfoliio_stocks_result
   }
 
 
@@ -204,6 +204,6 @@ def get_overall_calculation_result(db: Session):
   overall_result = calculate_multiple_assets(portfolios_result)
 
   return {
-    overall_result: overall_result,
-    portfolios_result: portfolios_result
+    "overall_result": overall_result,
+    "portfolios_result": portfolios_result
   }
