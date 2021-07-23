@@ -3,6 +3,6 @@ uvicorn
 sqlalchemy
 fastapi-utils
 requests
-pandas
+pandas>=1.30
 yfinance
 gunicorn
