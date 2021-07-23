@@ -137,7 +137,9 @@ def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str,
 
   stock_prices_df = pd.read_sql(stock_prices_query.statement, db.bind)
 
-  return calculate_portfolio_stock(transactions_df, stock_prices_df).to_dict('records')
+  return calculate_portfolio_stock(transactions_df, stock_prices_df)\
+    .round(4)\
+    .to_dict('list')
 
 
 
@@ -155,6 +157,7 @@ def calculate_multiple_assets(assets_result: dict):
     keys=assets_result.keys(),
     sort=True
   ).reset_index()
+
 
 
   merged_df['cost'] = merged_df.xs('cost', axis=1, level=1).sum(axis=1)
@@ -181,7 +184,9 @@ def get_portfolio_calculation_result(portfolio_id: int, db: Session):
     for portfolio_stock in portfolio_stocks
   }
 
-  portfolio_result = calculate_multiple_assets(portfoliio_stocks_result).to_dict('records')
+  portfolio_result = calculate_multiple_assets(portfoliio_stocks_result)\
+    .round(4)\
+    .to_dict('list')
 
   return {
     "portfolio_result": portfolio_result,

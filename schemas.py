@@ -41,7 +41,7 @@ class PortfolioStock(PortfolioStockBase):
         orm_mode = True
 
 class PortfolioStockWithCalculationResult(PortfolioStockBase):
-    calculation_results: List[dict]
+    calculation_results: dict
 
 
 
@@ -67,7 +67,7 @@ class Portfolio(PortfolioBase):
 
 
 class PortfolioWithCalculationResult(Portfolio):
-    calculation_results: List[dict]
+    calculation_results: dict
     portfolio_stocks: List[PortfolioStockWithCalculationResult]
 
 
