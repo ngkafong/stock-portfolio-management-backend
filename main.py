@@ -21,7 +21,7 @@ def get_db():
     finally:
         db.close()
 
-# @app.on_event("startup")
+@app.on_event("startup")
 @repeat_every(seconds=60 * 60 * 6)
 def update_all_stock_history():
     db = SessionLocal()

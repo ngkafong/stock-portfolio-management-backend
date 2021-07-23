@@ -12,6 +12,11 @@ gunicorn main:app -w 2 -k uvicorn.workers.UvicornWorker -b :8080 --access-logfil
 pkill -f gunicorn
 ```
 
+### port tunneling:
+```
+nohup ngrok http 8080 --log=stdout > logs/ngrok.log &
+```
+
 TODO List:
 
 construct demo data.
