@@ -6,14 +6,12 @@ import calculate
 
 def delete_garbage_stock(db: Session):
     garbage_stock = db.query(models.Stock).filter(models.Stock.portfolio_stocks==None).first()
-    print("delete stock", garbage_stock.stock_symbol)
     db.delete(garbage_stock)
     db.commit()
     return
 
 def delete_garbage_portfolio_stock(db: Session):
     garbage_portfolio_stock = db.query(models.PortfolioStock).filter(models.PortfolioStock.transactions==None).first()
-    print("delete stock portfolio", garbage_portfolio_stock.portfolio_id, garbage_portfolio_stock.stock_symbol)
     db.delete(garbage_portfolio_stock)
     db.commit()
     return
@@ -53,7 +51,6 @@ def get_transactions(db: Session):
     return db.query(models.Transaction).all()
 
 def create_stock(db: Session, stock: schemas.StockCreate):
-    print("create stock", stock)
     db_stock = models.Stock(**stock.dict())
     db.add(db_stock)
     db.commit()
@@ -61,7 +58,6 @@ def create_stock(db: Session, stock: schemas.StockCreate):
     return db_stock
 
 def create_portfolio_stock(db: Session, portfolio_stock: schemas.PortfolioStockCreate):
-    print("create portfolio stock", portfolio_stock)
     db_portfolio_stock = models.PortfolioStock(**portfolio_stock.dict())
     db.add(db_portfolio_stock)
     db.commit()
