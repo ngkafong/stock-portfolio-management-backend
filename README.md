@@ -4,7 +4,7 @@ uvicorn main:app --reload --port 8080
 ```
 ### run prod:
 ```
-nohup gunicorn main:app -k uvicorn.workers.UvicornWorker -b :80 --daemon --access-logfile logs/access.log --error-logfile logs/error.log
+gunicorn main:app -k uvicorn.workers.UvicornWorker -b :80 --daemon --access-logfile logs/access.log --error-logfile logs/error.log
 ```
 
 ## kill prod:
