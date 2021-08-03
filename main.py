@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.tasks import repeat_every
 from sqlalchemy.orm import Session
 
@@ -14,6 +15,18 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+origins = [
+    "http://23.94.100.114/",
+    "http://localhost:8080"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["*"],
+    allow_headers=["Accept", "Content-Type"],
+)
+
 def get_db():
     db = SessionLocal()
     try:
@@ -22,7 +35,7 @@ def get_db():
         db.close()
 
 @app.on_event("startup")
-@repeat_every(seconds=60 * 60 * 6)
+@repeat_every(seconds=60 * 60 * 3)
 def update_all_stock_history():
     db = SessionLocal()
     financeapi.update_all_stock_price_history(db)
