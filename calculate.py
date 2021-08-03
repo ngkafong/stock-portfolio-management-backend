@@ -202,7 +202,7 @@ def get_overall_calculation_result(db: Session):
     portfolio.portfolio_id: get_portfolio_calculation_result(
       portfolio.portfolio_id,
       db
-    ).portfolio_result
+    )['portfolio_result']
     for portfolio in portfolios
   }
 

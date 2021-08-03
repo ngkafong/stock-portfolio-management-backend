@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 import crud
 import models
 import schemas
+import calculate
 import financeapi
 from database import SessionLocal, engine
 
@@ -48,7 +49,7 @@ def read_root():
 
 @app.get("/overall")
 def getOverall(db: Session = Depends(get_db)):
-    return get_overall_calculation_result(db=db)
+    return calculate.get_overall_calculation_result(db=db)
 
 @app.get("/transactions")
 def getTransaction(db: Session = Depends(get_db)):
