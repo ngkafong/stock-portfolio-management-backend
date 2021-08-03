@@ -1,4 +1,4 @@
-### run dev: 
+### run dev:
 ```
 uvicorn main:app --reload --port 8080
 ```
@@ -12,10 +12,6 @@ gunicorn main:app -k uvicorn.workers.UvicornWorker -b :80 --daemon --access-logf
 pkill -f gunicorn
 ```
 
-### port tunneling:
-```
-nohup ngrok http 8080 --log=stdout > logs/ngrok.log &
-```
 
 TODO List:
 

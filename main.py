@@ -17,7 +17,8 @@ app = FastAPI()
 
 origins = [
     "http://23.94.100.114/",
-    "http://localhost:8080"
+    "http://localhost:8080",
+    "https://ngkafong.github.io/"
 ]
 
 app.add_middleware(
