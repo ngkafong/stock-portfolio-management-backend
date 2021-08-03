@@ -46,6 +46,10 @@ def update_all_stock_history():
 def read_root():
     return {"Hello": "World"}
 
+@app.get("/overall")
+def getOverall(db: Session = Depends(get_db)):
+    return get_overall_calculation_result(db=db)
+
 @app.get("/transactions")
 def getTransaction(db: Session = Depends(get_db)):
     return crud.get_transactions(db=db)
