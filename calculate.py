@@ -91,7 +91,7 @@ def calculate_return_statistics(asset_df: pd.DataFrame):
 
 
 
-def calculate_portfolio_stock(transactions_df: pd.DataFrame, stock_prices_df: pd.DataFrame):
+def calculate_portfolio_stock(transactions_df: pd.DataFrame, stock_prices_df: pd.DataFrame, balance_only=False):
 
   account_movements_df = transactions_df.apply(
     transaction_record_to_account_movement, axis=1
@@ -108,13 +108,14 @@ def calculate_portfolio_stock(transactions_df: pd.DataFrame, stock_prices_df: pd
 
   balance_price_df['market_value'] = balance_price_df['shares'] * balance_price_df['price']
 
-  result_df = calculate_return_statistics(balance_price_df)
+  if balance_only:
+    return balance_price_df
+  else:
+    return calculate_return_statistics(balance_price_df)
 
-  return result_df
 
 
-
-def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str, db: Session):
+def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str, db: Session, short=False):
 
   transactions_query = db.query(models.Transaction)\
     .filter(
@@ -143,7 +144,7 @@ def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str,
 
 
 
-def calculate_multiple_assets(assets_result: dict):
+def calculate_multiple_assets(assets_result: dict, balance_only=False):
 
   # input: { asset_1: asset_1_result, asset_2: asset_2_result }
   # output: combined_asset_result [{date, market_value, cost, ...}, ...]
@@ -158,18 +159,19 @@ def calculate_multiple_assets(assets_result: dict):
     sort=True
   ).reset_index()
 
-
-
   merged_df['cost'] = merged_df.xs('cost', axis=1, level=1).sum(axis=1)
   merged_df['market_value'] = merged_df.xs('market_value', axis=1, level=1).sum(axis=1)
 
-  result_df = calculate_return_statistics(merged_df[['date', 'cost', 'market_value']].droplevel(1, axis=1))
+  balance_df = merged_df[['date', 'cost', 'market_value']].droplevel(1, axis=1)
 
-  return result_df
+  if balance_only:
+    return balance_df
+  else:
+    return calculate_return_statistics(balance_df)
 
 
 
-def get_portfolio_calculation_result(portfolio_id: int, db: Session):
+def get_portfolio_calculation_result(portfolio_id: int, db: Session, short=False):
 
   portfolio_stocks = db.query(models.PortfolioStock)\
     .filter(models.PortfolioStock.portfolio_id == portfolio_id)\
@@ -179,7 +181,8 @@ def get_portfolio_calculation_result(portfolio_id: int, db: Session):
     portfolio_stock.stock_symbol: get_portfolio_stock_calculation_result(
       portfolio_stock.portfolio_id,
       portfolio_stock.stock_symbol,
-      db
+      db,
+      balance_only=True
     )
     for portfolio_stock in portfolio_stocks
   }
@@ -201,7 +204,8 @@ def get_overall_calculation_result(db: Session):
   portfolios_result = {
     portfolio.portfolio_id: get_portfolio_calculation_result(
       portfolio.portfolio_id,
-      db
+      db,
+      balance_only=True
     )['portfolio_result']
     for portfolio in portfolios
   }
