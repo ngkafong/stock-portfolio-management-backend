@@ -167,10 +167,7 @@ def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str,
     result_df = calculate_portfolio_stock(transactions_df, stock_prices_df, balance_only=True)
     today_return_statistics = calculate_today_return_statistics(result_df)
 
-    return {
-      **today_return_statistics.to_dict(),
-      **result_df.round(4).to_dict('list')
-    }
+    return today_return_statistics.to_dict()
 
   else:
 
@@ -227,10 +224,7 @@ def get_portfolio_calculation_result(portfolio_id: int, db: Session, short=False
     result_df = calculate_multiple_assets(portfoliio_stocks_result, balance_only=True)
     today_return_statistics = calculate_today_return_statistics(result_df)
 
-    return {
-      **today_return_statistics.to_dict(),
-      **result_df.round(4).to_dict('list')
-    }
+    return today_return_statistics.to_dict()
 
   else:
     portfolio_result = calculate_multiple_assets(portfoliio_stocks_result)\
