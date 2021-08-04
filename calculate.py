@@ -62,7 +62,7 @@ def stock_movements_to_balance(movements_df: pd.DataFrame):
 def calculate_today_return_statistics(asset_df: pd.DataFrame):
 
   # input: df with column [ 'date', 'market_value', 'cost', ... ]
-  # output: df with column [ ...input_colums, 'net_profit', 'daily_profit', 'daily_profit_rate',
+  # output: Series with column [ ...input_colums, 'net_profit', 'daily_profit', 'daily_profit_rate',
   # 'return_rate', 'money_weighted_return_rate', 'time_weighted_return_rate']
 
   def calculate_today_adjusted_cost(df):
@@ -81,13 +81,11 @@ def calculate_today_return_statistics(asset_df: pd.DataFrame):
 
 
   last_row = calculate_df.iloc[-1]
+  last_row['return_rate'] = last_row['net_profit'] / last_row['cost'],
+  last_row['money_weighted_return_rate'] = calculate_today_adjusted_cost(calculate_df),
+  last_row['time_weighted_return_rate'] = (calculate_df['daily_profit_rate'] + 1).prod() - 1
 
-  return {
-    **last_row.to_dict(),
-    'return_rate': last_row.net_profit / last_row.cost,
-    'money_weighted_return_rate': calculate_today_adjusted_cost(calculate_df),
-    'time_weighted_return_rate': (calculate_df['daily_profit_rate'] + 1).prod() - 1
-  }
+  return last_row
 
 def calculate_return_statistics(asset_df: pd.DataFrame):
 
@@ -166,9 +164,21 @@ def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str,
 
   stock_prices_df = pd.read_sql(stock_prices_query.statement, db.bind)
 
-  return calculate_portfolio_stock(transactions_df, stock_prices_df, balance_only=short)\
-    .round(4)\
-    .to_dict('list')
+  if short:
+
+    result_df = calculate_portfolio_stock(transactions_df, stock_prices_df, balance_only=True)
+    today_return_statistics = calculate_today_return_statistics(result_df)
+
+    return {
+      **result_df.round(4).to_dict('list'),
+      **today_return_statistics.round(4).to_dict('list')
+    }
+
+  else:
+
+    return calculate_portfolio_stock(transactions_df, stock_prices_df)\
+      .round(4)\
+      .to_dict('list')
 
 
 
