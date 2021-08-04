@@ -138,7 +138,7 @@ def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str,
 
   stock_prices_df = pd.read_sql(stock_prices_query.statement, db.bind)
 
-  return calculate_portfolio_stock(transactions_df, stock_prices_df)\
+  return calculate_portfolio_stock(transactions_df, stock_prices_df, balance_only=short)\
     .round(4)\
     .to_dict('list')
 
@@ -182,12 +182,12 @@ def get_portfolio_calculation_result(portfolio_id: int, db: Session, short=False
       portfolio_stock.portfolio_id,
       portfolio_stock.stock_symbol,
       db,
-      balance_only=True
+      short=True
     )
     for portfolio_stock in portfolio_stocks
   }
 
-  portfolio_result = calculate_multiple_assets(portfoliio_stocks_result)\
+  portfolio_result = calculate_multiple_assets(portfoliio_stocks_result, balance_only=short)\
     .round(4)\
     .to_dict('list')
 
@@ -205,7 +205,7 @@ def get_overall_calculation_result(db: Session):
     portfolio.portfolio_id: get_portfolio_calculation_result(
       portfolio.portfolio_id,
       db,
-      balance_only=True
+      short=True
     )['portfolio_result']
     for portfolio in portfolios
   }
