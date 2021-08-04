@@ -170,8 +170,8 @@ def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str,
     today_return_statistics = calculate_today_return_statistics(result_df)
 
     return {
-      **result_df.round(4).to_dict('list'),
       **today_return_statistics.round(4).to_dict('list')
+      **result_df.round(4).to_dict('list'),
     }
 
   else:
@@ -225,14 +225,23 @@ def get_portfolio_calculation_result(portfolio_id: int, db: Session, short=False
     for portfolio_stock in portfolio_stocks
   }
 
-  portfolio_result = calculate_multiple_assets(portfoliio_stocks_result, balance_only=short)\
-    .round(4)\
-    .to_dict('list')
+  if short:
+    result_df = calculate_multiple_assets(portfoliio_stocks_result, balance_only=True)
+    today_return_statistics = calculate_today_return_statistics(result_df)
 
-  return {
-    "portfolio_result": portfolio_result,
-    "portfolio_stocks_result": portfoliio_stocks_result
-  }
+    return {
+      **today_return_statistics.round(4).to_dict(),
+      **result_df.round(4).to_dict()
+    }
+
+  else:
+    portfolio_result = calculate_multiple_assets(portfoliio_stocks_result)\
+      .round(4)\
+      .to_dict('list')
+    return {
+      "portfolio_result": portfolio_result,
+      "portfolio_stocks_result": portfoliio_stocks_result
+    }
 
 
 def get_overall_calculation_result(db: Session):
@@ -244,7 +253,7 @@ def get_overall_calculation_result(db: Session):
       portfolio.portfolio_id,
       db,
       short=True
-    )['portfolio_result']
+    )
     for portfolio in portfolios
   }
 
