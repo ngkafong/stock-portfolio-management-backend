@@ -20,12 +20,12 @@ def delete_garbage_portfolio_stock(db: Session):
 
 def get_overall(db: Session):
 
-    calculation_results = calculate.get_overall_result(db)
+    calculation_results = calculate.get_overall_calculation_result(db)
 
     db_portfolios = db.query(models.Portfolio).all()
 
     return {
-        "calculation_results": calculation_results["overall_result"]
+        "calculation_results": calculation_results["overall_result"],
         "portfolios": [{
             **(portfolio.__dict__),
             "calculation_results": calculation_results["portfolios_result"][portfolio.portfolio_id]

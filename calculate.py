@@ -79,12 +79,10 @@ def calculate_today_return_statistics(asset_df: pd.DataFrame):
   calculate_df['daily_profit'] = np.diff(calculate_df['net_profit'], prepend=0)
   calculate_df['daily_profit_rate'] = calculate_df['daily_profit'] / calculate_df['cost']
 
-
-  last_row = calculate_df.iloc[-1]
-  last_row['return_rate'] = last_row['net_profit'] / last_row['cost'],
-  last_row['money_weighted_return_rate'] = calculate_today_adjusted_cost(calculate_df),
-  last_row['time_weighted_return_rate'] = (calculate_df['daily_profit_rate'] + 1).prod() - 1
-
+  last_row = calculate_df.iloc[-1].copy()
+  last_row['return_rate'] = last_row['net_profit'] / last_row['cost']
+  last_row['money_weighted_return_rate'] = last_row['net_profit']/ calculate_today_adjusted_cost(calculate_df)
+  last_row['time_weighted_return_rate'] = np.prod(calculate_df['daily_profit_rate'] + 1) - 1
   return last_row
 
 def calculate_return_statistics(asset_df: pd.DataFrame):
@@ -170,8 +168,8 @@ def get_portfolio_stock_calculation_result(portfolio_id: int, stock_symbol: str,
     today_return_statistics = calculate_today_return_statistics(result_df)
 
     return {
-      **today_return_statistics.round(4).to_dict('list')
-      **result_df.round(4).to_dict('list'),
+      **today_return_statistics.to_dict(),
+      **result_df.round(4).to_dict('list')
     }
 
   else:
@@ -230,8 +228,8 @@ def get_portfolio_calculation_result(portfolio_id: int, db: Session, short=False
     today_return_statistics = calculate_today_return_statistics(result_df)
 
     return {
-      **today_return_statistics.round(4).to_dict(),
-      **result_df.round(4).to_dict()
+      **today_return_statistics.to_dict(),
+      **result_df.round(4).to_dict('list')
     }
 
   else:
