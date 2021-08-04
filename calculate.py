@@ -255,7 +255,7 @@ def get_overall_calculation_result(db: Session):
     for portfolio in portfolios
   }
 
-  overall_result = calculate_multiple_assets(portfolios_result)
+  overall_result = calculate_multiple_assets(portfolios_result).round(4).to_dict('list')
 
   return {
     "overall_result": overall_result,
