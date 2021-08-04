@@ -35,12 +35,12 @@ def get_db():
     finally:
         db.close()
 
-# @app.on_event("startup")
-# @repeat_every(seconds=60 * 60 * 3)
-# def update_all_stock_history():
-#     db = SessionLocal()
-#     financeapi.update_all_stock_price_history(db)
-#     db.close()
+@app.on_event("startup")
+@repeat_every(seconds=60 * 60 * 3)
+def update_all_stock_history():
+    db = SessionLocal()
+    financeapi.update_all_stock_price_history(db)
+    db.close()
 
 @app.get("/")
 def read_root():
