@@ -59,7 +59,35 @@ def stock_movements_to_balance(movements_df: pd.DataFrame):
 
   return balance_df
 
+def calculate_today_return_statistics(asset_df: pd.DataFrame):
 
+  # input: df with column [ 'date', 'market_value', 'cost', ... ]
+  # output: df with column [ ...input_colums, 'net_profit', 'daily_profit', 'daily_profit_rate',
+  # 'return_rate', 'money_weighted_return_rate', 'time_weighted_return_rate']
+
+  def calculate_today_adjusted_cost(df):
+    # calculate adjusted cost according to formula of money weighted return rate
+    start_date = df['date'].iloc[0]
+    cash_flow = np.diff(df['cost'], prepend=0)
+    today = df['date'].iloc[-1]
+    weight = (today - df['date'] + timedelta(days=1)) / (today - start_date + timedelta(days=1))
+    return (cash_flow * weight).sum()
+
+
+  calculate_df = asset_df.copy().reset_index(drop=True)
+  calculate_df['net_profit'] = calculate_df['market_value'] - calculate_df['cost']
+  calculate_df['daily_profit'] = np.diff(calculate_df['net_profit'], prepend=0)
+  calculate_df['daily_profit_rate'] = calculate_df['daily_profit'] / calculate_df['cost']
+
+
+  last_row = calculate_df.iloc[-1]
+
+  return {
+    **last_row.to_dict(),
+    'return_rate': last_row.net_profit / last_row.cost,
+    'money_weighted_return_rate': calculate_today_adjusted_cost(calculate_df),
+    'time_weighted_return_rate': (calculate_df['daily_profit_rate'] + 1).prod() - 1
+  }
 
 def calculate_return_statistics(asset_df: pd.DataFrame):
 
